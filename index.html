@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rota de Mercados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --asfalto: #171d26;
+    --asfalto-2: #232b38;
+    --linha: #f4b942;
+    --concreto: #eae5da;
+    --concreto-dim: #c9c2b2;
+    --laranja: #e8590c;
+    --verde: #4c7a5c;
+    --verde-luz: #7fb894;
+    --vermelho: #c0392b;
+    --radius: 10px;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Public Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--asfalto);
+    color: var(--concreto);
+    font-family: var(--font-body);
+    min-height:100vh;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(244,185,66,0.05), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(232,89,12,0.06), transparent 40%);
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:0 20px 80px;}
+
+  /* HERO */
+  .hero{
+    padding:36px 20px 28px;
+    border-bottom: 4px dashed var(--linha);
+    position:relative;
+    text-align:center;
+  }
+  .hero .eyebrow{
+    font-family: var(--font-mono);
+    letter-spacing:3px;
+    font-size:12px;
+    color: var(--linha);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .hero h1{
+    font-family: var(--font-display);
+    font-size:56px;
+    letter-spacing:2px;
+    margin:0;
+    line-height:0.95;
+    color:var(--concreto);
+  }
+  .hero h1 span{color:var(--linha);}
+  .hero p.sub{
+    color:var(--concreto-dim);
+    font-size:14px;
+    margin-top:8px;
+  }
+
+  .stat-row{
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    margin-top:22px;
+    flex-wrap:wrap;
+  }
+  .stat-card{
+    background: var(--asfalto-2);
+    border:1px solid #333c4c;
+    border-radius: var(--radius);
+    padding:14px 22px;
+    min-width:120px;
+  }
+  .stat-card .num{
+    font-family: var(--font-display);
+    font-size:34px;
+    color:var(--linha);
+    line-height:1;
+  }
+  .stat-card .lbl{
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--concreto-dim);
+    margin-top:4px;
+  }
+
+  .mark-btn{
+    margin-top:26px;
+    background: var(--laranja);
+    color:#fff;
+    border:none;
+    font-family:var(--font-display);
+    font-size:22px;
+    letter-spacing:1.5px;
+    padding:16px 40px;
+    border-radius: 999px;
+    cursor:pointer;
+    box-shadow: 0 4px 0 #a5410a;
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .mark-btn:active{ transform: translateY(4px); box-shadow:0 0 0 #a5410a; }
+  .mark-btn:disabled{ opacity:0.6; cursor:progress; }
+  .mark-btn:focus-visible{ outline:3px solid var(--linha); outline-offset:3px; }
+
+  .status-line{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color: var(--concreto-dim);
+    margin-top:12px;
+    min-height:18px;
+  }
+  .status-line.ok{ color: var(--verde-luz); }
+  .status-line.err{ color: #ff8a75; }
+
+  /* ROUTE STRIP - signature element */
+  .section{padding:34px 0 8px;}
+  .section h2{
+    font-family: var(--font-display);
+    font-size:26px;
+    letter-spacing:1px;
+    margin:0 0 4px;
+    color:var(--concreto);
+  }
+  .section .section-sub{
+    font-size:13px;
+    color:var(--concreto-dim);
+    margin-bottom:18px;
+  }
+
+  .strip-scroll{
+    overflow-x:auto;
+    padding:22px 6px 30px;
+  }
+  .route-strip{
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    min-width: max-content;
+    gap:0;
+    padding-top:10px;
+  }
+  .road-line{
+    position:absolute;
+    left:0; right:0; top:34px;
+    height:3px;
+    background: repeating-linear-gradient(to right, var(--linha) 0 14px, transparent 14px 26px);
+  }
+  .stop-node{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:120px;
+    flex-shrink:0;
+    cursor:pointer;
+    background:none;
+    border:none;
+    color:inherit;
+    font-family:inherit;
+    padding-top:0;
+  }
+  .stop-node .dot{
+    width:20px; height:20px;
+    border-radius:50%;
+    background: var(--asfalto);
+    border:3px solid var(--verde-luz);
+    margin-top:24px;
+    transition: transform .12s ease;
+  }
+  .stop-node:hover .dot, .stop-node:focus-visible .dot{
+    transform: scale(1.25);
+    border-color: var(--linha);
+  }
+  .stop-node .n-label{
+    margin-top:10px;
+    font-size:12px;
+    font-weight:600;
+    text-align:center;
+    color: var(--concreto);
+    max-width:110px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .stop-node .n-time{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color: var(--concreto-dim);
+    margin-top:2px;
+  }
+  .empty-strip{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color: var(--concreto-dim);
+    padding:18px 4px;
+  }
+
+  /* LIST */
+  .stop-list{list-style:none; margin:0; padding:0;}
+  .stop-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    background: var(--asfalto-2);
+    border:1px solid #333c4c;
+    border-left:4px solid var(--verde-luz);
+    border-radius: var(--radius);
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .stop-item .info{flex:1; min-width:0;}
+  .stop-item .name{
+    font-weight:700;
+    font-size:15px;
+    display:block;
+    margin-bottom:2px;
+  }
+  .stop-item .addr{
+    font-size:12.5px;
+    color: var(--concreto-dim);
+    display:block;
+  }
+  .stop-item .meta{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color: var(--concreto-dim);
+    margin-top:6px;
+  }
+  .stop-item .actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .icon-btn{
+    background:transparent;
+    border:1px solid #444e5f;
+    color: var(--concreto);
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:11px;
+    font-family:var(--font-body);
+    cursor:pointer;
+    text-decoration:none;
+    text-align:center;
+  }
+  .icon-btn:hover{border-color:var(--linha); color:var(--linha);}
+  .icon-btn.danger:hover{border-color:var(--vermelho); color:#ff8a75;}
+
+  /* WEEK HISTORY */
+  .week-block{
+    border:1px solid #333c4c;
+    border-radius: var(--radius);
+    margin-bottom:12px;
+    overflow:hidden;
+  }
+  .week-head{
+    width:100%;
+    background: var(--asfalto-2);
+    border:none;
+    color: var(--concreto);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 16px;
+    cursor:pointer;
+    font-family:var(--font-body);
+  }
+  .week-head .w-title{font-weight:700; font-size:14px;}
+  .week-head .w-count{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--linha);
+  }
+  .week-body{ padding:12px 14px; display:none; }
+  .week-body.open{ display:block; }
+  .chevron{ transition: transform .15s ease; }
+  .chevron.open{ transform: rotate(180deg); }
+
+  .empty-state{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--concreto-dim);
+    text-align:center;
+    padding:30px 10px;
+    border:1px dashed #333c4c;
+    border-radius:var(--radius);
+  }
+
+  /* Edit modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(10,13,18,0.7);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:50;
+  }
+  .modal{
+    background: var(--asfalto-2);
+    border:1px solid #444e5f;
+    border-radius: var(--radius);
+    padding:22px;
+    width:100%;
+    max-width:380px;
+  }
+  .modal h3{
+    font-family:var(--font-display);
+    font-size:22px;
+    margin:0 0 14px;
+    letter-spacing:1px;
+  }
+  .modal label{
+    display:block;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--concreto-dim);
+    margin-bottom:5px;
+    margin-top:12px;
+  }
+  .modal input{
+    width:100%;
+    background: var(--asfalto);
+    border:1px solid #444e5f;
+    color:var(--concreto);
+    border-radius:6px;
+    padding:9px 10px;
+    font-family:var(--font-body);
+    font-size:14px;
+  }
+  .modal input:focus-visible{ outline:2px solid var(--linha); }
+  .modal-actions{
+    display:flex; gap:10px; margin-top:20px;
+  }
+  .modal-actions button{
+    flex:1;
+    border-radius:6px;
+    padding:10px;
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    border:1px solid #444e5f;
+    background:transparent;
+    color:var(--concreto);
+  }
+  .modal-actions .save{ background: var(--laranja); border-color:var(--laranja); color:#fff; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+  @media (max-width:480px){
+    .hero h1{font-size:42px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Registro de paradas &mdash; motorista</div>
+  <h1>ROTA DE<br><span>MERCADOS</span></h1>
+  <p class="sub">Marque cada parada e acompanhe quantos mercados você atende por semana.</p>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="num" id="statWeekCount">0</div>
+      <div class="lbl">Nesta semana</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statTotalCount">0</div>
+      <div class="lbl">Total registrado</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statWeeksCount">0</div>
+      <div class="lbl">Semanas ativas</div>
+    </div>
+  </div>
+
+  <button class="mark-btn" id="markBtn">📍 Marcar parada</button>
+  <div class="status-line" id="statusLine"></div>
+</div>
+
+<div class="wrap">
+
+  <div class="section">
+    <h2>Rota desta semana</h2>
+    <div class="section-sub" id="weekRangeLabel">&mdash;</div>
+    <div class="strip-scroll">
+      <div class="route-strip" id="routeStrip"></div>
+    </div>
+
+    <ul class="stop-list" id="weekList"></ul>
+    <div class="empty-state" id="emptyWeek" style="display:none;">
+      Nenhuma parada registrada nesta semana ainda.<br>Toque em "Marcar parada" quando chegar em um mercado.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Semanas anteriores</h2>
+    <div class="section-sub">Histórico completo de mercados atendidos</div>
+    <div id="historyList"></div>
+    <div class="empty-state" id="emptyHistory" style="display:none;">
+      Ainda não há semanas anteriores registradas.
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" style="display:none;">
+  <div class="modal">
+    <h3>Nome do mercado</h3>
+    <label for="modalName">Nome</label>
+    <input type="text" id="modalName" placeholder="Ex: Mercado Bom Preço">
+    <label for="modalAddr">Endereço (opcional)</label>
+    <input type="text" id="modalAddr" placeholder="Rua, número, bairro">
+    <div class="modal-actions">
+      <button id="modalCancel">Cancelar</button>
+      <button class="save" id="modalSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'stops-v1';
+let stops = [];
+let pendingStop = null;
+let editingId = null;
+
+function isoWeekInfo(date){
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  const week = 1 + Math.round(((d - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+  return { year: d.getUTCFullYear(), week };
+}
+function weekKey(dateStr){
+  const info = isoWeekInfo(new Date(dateStr));
+  return info.year + '-W' + String(info.week).padStart(2,'0');
+}
+function weekRangeLabel(key){
+  const [yearStr, wStr] = key.split('-W');
+  const year = parseInt(yearStr), week = parseInt(wStr);
+  const jan4 = new Date(Date.UTC(year,0,4));
+  const dayNum = (jan4.getUTCDay() + 6) % 7;
+  const monday1 = new Date(jan4); monday1.setUTCDate(jan4.getUTCDate() - dayNum);
+  const monday = new Date(monday1); monday.setUTCDate(monday1.getUTCDate() + (week-1)*7);
+  const sunday = new Date(monday); sunday.setUTCDate(monday.getUTCDate()+6);
+  const fmt = d => d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+  return fmt(monday) + ' a ' + fmt(sunday);
+}
+function fmtTime(dateStr){
+  return new Date(dateStr).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+}
+function fmtTimeShort(dateStr){
+  return new Date(dateStr).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+
+async function loadStops(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    stops = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    stops = [];
+  }
+  render();
+}
+async function saveStops(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(stops), false);
+  }catch(e){
+    setStatus('Não foi possível salvar. Tente novamente.', 'err');
+  }
+}
+
+function setStatus(msg, type){
+  const el = document.getElementById('statusLine');
+  el.textContent = msg;
+  el.className = 'status-line' + (type ? ' ' + type : '');
+}
+
+document.getElementById('markBtn').addEventListener('click', () => {
+  if(!navigator.geolocation){
+    setStatus('Seu navegador não suporta localização.', 'err');
+    return;
+  }
+  const btn = document.getElementById('markBtn');
+  btn.disabled = true;
+  setStatus('Obtendo sua localização...', '');
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { latitude, longitude } = pos.coords;
+    setStatus('Localização encontrada. Buscando endereço...', '');
+    let addr = '';
+    let suggestedName = '';
+    try{
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+      const data = await r.json();
+      if(data){
+        addr = data.display_name || '';
+        suggestedName = (data.name) || (data.address && (data.address.shop || data.address.amenity)) || '';
+      }
+    }catch(e){ /* segue sem endereço */ }
+    btn.disabled = false;
+    setStatus('', '');
+    pendingStop = { lat: latitude, lon: longitude, addr, suggestedName };
+    openModal(suggestedName, addr);
+  }, (err) => {
+    btn.disabled = false;
+    setStatus('Não foi possível obter a localização: ' + err.message, 'err');
+  }, { enableHighAccuracy:true, timeout:15000 });
+});
+
+function openModal(name, addr){
+  editingId = null;
+  document.getElementById('modalName').value = name || '';
+  document.getElementById('modalAddr').value = addr || '';
+  document.getElementById('modalBackdrop').style.display = 'flex';
+  document.getElementById('modalName').focus();
+}
+function openEditModal(stop){
+  editingId = stop.id;
+  pendingStop = null;
+  document.getElementById('modalName').value = stop.name || '';
+  document.getElementById('modalAddr').value = stop.addr || '';
+  document.getElementById('modalBackdrop').style.display = 'flex';
+  document.getElementById('modalName').focus();
+}
+function closeModal(){
+  document.getElementById('modalBackdrop').style.display = 'none';
+  pendingStop = null;
+  editingId = null;
+}
+document.getElementById('modalCancel').addEventListener('click', closeModal);
+document.getElementById('modalBackdrop').addEventListener('click', (e) => {
+  if(e.target.id === 'modalBackdrop') closeModal();
+});
+document.getElementById('modalSave').addEventListener('click', async () => {
+  const name = document.getElementById('modalName').value.trim() || 'Mercado sem nome';
+  const addr = document.getElementById('modalAddr').value.trim();
+
+  if(editingId){
+    const s = stops.find(x => x.id === editingId);
+    if(s){ s.name = name; s.addr = addr; }
+  } else if(pendingStop){
+    stops.push({
+      id: 'stop_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      name, addr,
+      lat: pendingStop.lat, lon: pendingStop.lon,
+      date: new Date().toISOString()
+    });
+  }
+  closeModal();
+  await saveStops();
+  render();
+});
+
+function deleteStop(id){
+  stops = stops.filter(s => s.id !== id);
+  saveStops();
+  render();
+}
+
+function groupByWeek(){
+  const groups = {};
+  for(const s of stops){
+    const k = weekKey(s.date);
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(s);
+  }
+  for(const k in groups){
+    groups[k].sort((a,b) => new Date(a.date) - new Date(b.date));
+  }
+  return groups;
+}
+
+function render(){
+  const groups = groupByWeek();
+  const thisWeekKey = weekKey(new Date().toISOString());
+  const thisWeekStops = groups[thisWeekKey] || [];
+
+  document.getElementById('statWeekCount').textContent = thisWeekStops.length;
+  document.getElementById('statTotalCount').textContent = stops.length;
+  document.getElementById('statWeeksCount').textContent = Object.keys(groups).length;
+  document.getElementById('weekRangeLabel').textContent = weekRangeLabel(thisWeekKey);
+
+  // Route strip
+  const strip = document.getElementById('routeStrip');
+  strip.innerHTML = '';
+  if(thisWeekStops.length === 0){
+    strip.innerHTML = '<div class="empty-strip">Sem paradas ainda esta semana — a estrada está livre.</div>';
+  }else{
+    const road = document.createElement('div');
+    road.className = 'road-line';
+    strip.appendChild(road);
+    thisWeekStops.forEach((s) => {
+      const node = document.createElement('button');
+      node.className = 'stop-node';
+      node.innerHTML = `<div class="dot"></div><div class="n-label">${escapeHtml(s.name)}</div><div class="n-time">${fmtTimeShort(s.date)}</div>`;
+      node.addEventListener('click', () => openEditModal(s));
+      strip.appendChild(node);
+    });
+  }
+
+  // Week list
+  const list = document.getElementById('weekList');
+  list.innerHTML = '';
+  document.getElementById('emptyWeek').style.display = thisWeekStops.length ? 'none' : 'block';
+  thisWeekStops.slice().reverse().forEach(s => {
+    list.appendChild(stopItemEl(s));
+  });
+
+  // History
+  const histEl = document.getElementById('historyList');
+  histEl.innerHTML = '';
+  const otherKeys = Object.keys(groups).filter(k => k !== thisWeekKey).sort().reverse();
+  document.getElementById('emptyHistory').style.display = otherKeys.length ? 'none' : 'block';
+  otherKeys.forEach(k => {
+    const block = document.createElement('div');
+    block.className = 'week-block';
+    const head = document.createElement('button');
+    head.className = 'week-head';
+    head.innerHTML = `<span class="w-title">Semana de ${weekRangeLabel(k)}</span><span class="w-count">${groups[k].length} mercado${groups[k].length===1?'':'s'} <span class="chevron">▾</span></span>`;
+    const body = document.createElement('div');
+    body.className = 'week-body';
+    const ul = document.createElement('ul');
+    ul.className = 'stop-list';
+    groups[k].slice().reverse().forEach(s => ul.appendChild(stopItemEl(s)));
+    body.appendChild(ul);
+    head.addEventListener('click', () => {
+      body.classList.toggle('open');
+      head.querySelector('.chevron').classList.toggle('open');
+    });
+    block.appendChild(head);
+    block.appendChild(body);
+    histEl.appendChild(block);
+  });
+}
+
+function stopItemEl(s){
+  const li = document.createElement('li');
+  li.className = 'stop-item';
+  const mapUrl = `https://www.google.com/maps?q=${s.lat},${s.lon}`;
+  li.innerHTML = `
+    <div class="info">
+      <span class="name">${escapeHtml(s.name)}</span>
+      ${s.addr ? `<span class="addr">${escapeHtml(s.addr)}</span>` : ''}
+      <span class="meta">${fmtTime(s.date)}</span>
+    </div>
+    <div class="actions">
+      <a class="icon-btn" href="${mapUrl}" target="_blank" rel="noopener">Ver mapa</a>
+      <button class="icon-btn" data-edit>Editar</button>
+      <button class="icon-btn danger" data-del>Excluir</button>
+    </div>
+  `;
+  li.querySelector('[data-edit]').addEventListener('click', () => openEditModal(s));
+  li.querySelector('[data-del]').addEventListener('click', () => {
+    if(confirm('Excluir esta parada?')) deleteStop(s.id);
+  });
+  return li;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+loadStops();
+</script>
+
+</body>
+</html>
